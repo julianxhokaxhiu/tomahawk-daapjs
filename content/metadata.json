@@ -1,6 +1,6 @@
 {
     "name": "DAAP resolver",
-    "pluginName": "DAAPjs",
+    "pluginName": "DAAP",
     "author": "Julian Xhokaxhiu",
     "version": "0.1",
     "website": "http://julianxhokaxhiu.com",
@@ -11,6 +11,10 @@
         "scripts": [
             "contents/code/DaapClient.js"
         ],
-        "icon": "contents/images/icon.png"
+        "icon": "contents/images/icon.png",
+        "resources": [
+            "contents/code/config.ui",
+            "contents/code/daapjs.png"
+        ]
     }
 }

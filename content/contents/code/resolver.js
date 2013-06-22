@@ -7,8 +7,8 @@ var DaapJSResolver = Tomahawk.extend(TomahawkResolver,{
     songs:null,
     settings:
     {
-        name: 'DAAPjs',
-        icon: 'icon.png',
+        name: 'DAAP',
+        icon: 'daapjs.png',
         weight: 75,
         timeout: 5
     },
@@ -16,6 +16,7 @@ var DaapJSResolver = Tomahawk.extend(TomahawkResolver,{
         var userConfig = this.getUserConfig();
         var cachedSongs = window.localStorage.getItem('DJS_songs');
         if(cachedSongs){
+            if(userConfig !== undefined) this.host = userConfig.host;
             Tomahawk.log('Loading the existing cache...');
             this.songs = JSON.parse(cachedSongs);
             this.ready = true;
@@ -50,7 +51,10 @@ var DaapJSResolver = Tomahawk.extend(TomahawkResolver,{
                 widget: "passwordEdit",
                 property: "text"
             }
-            ]
+            ],
+            images: [{
+                "daapjs.png" : Tomahawk.readBase64("daapjs.png")
+            }]
         };
     },
     newConfigSaved: function(){
@@ -155,9 +159,9 @@ var DaapJSResolver = Tomahawk.extend(TomahawkResolver,{
     },
     collection:function(){
         if(this.ready) return {
-            prettyname: "DAAPjs",
-            description: '',
-            iconfile: "icon.png",
+            prettyname: "DAAP",
+            description: this.host,
+            iconfile: "daapjs.png",
             trackcount: this.songs.length
         };
     },
