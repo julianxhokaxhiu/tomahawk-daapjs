@@ -139,7 +139,8 @@ var DaapJSResolver = Tomahawk.extend(TomahawkResolver,{
             var len = this.songs.length;
             for(var i = 0; i < len; i++){
                 var song = this.songs[i];
-                if((song['artist']==artist) && (song['album']==album) && (!this.inArray(song['title'],ret.results)))ret.results.push(song['title']);
+                var tmp = this.getSongItem(song);
+                if((song['artist']==artist) && (song['album']==album) && (!this.inArray(tmp,ret.results)))ret.results.push(tmp);
             }
         }
         Tomahawk.addAlbumTrackResults(ret);
