@@ -100,50 +100,58 @@ var DaapJSResolver = Tomahawk.extend(TomahawkResolver,{
 
     //ScriptCollection
     artists:function(qid){
-        var ret = {
-            qid: qid,
-            artists: []
-        };
+        var ret = {};
         if(this.ready){
             var len = this.songs.length;
             for(var i = 0; i < len; i++){
                 var song = this.songs[i];
-                if(!this.inArray(song['artist'],ret.artists))ret.artists.push(song['artist']);
+                var key = song['artist'].toLowerCase();
+                // A better way handling duplicate keys with massive performance :)
+                // Thanks to <Jonathan Sampson> from http://stackoverflow.com/questions/10757516/how-to-prevent-adding-duplicate-keys-to-a-javascript-array
+                if(!(key in ret))ret[key] = song['artist'];
             }
         }
-        Tomahawk.addArtistResults(ret);
+        Tomahawk.addArtistResults({
+            qid: qid,
+            artists: this.objectValues(ret)
+        });
     },
     albums:function(qid,artist){
-        var ret = {
-            qid: qid,
-            artist: artist,
-            albums: []
-        };
+        var ret = {};
         if(this.ready){
             var len = this.songs.length;
             for(var i = 0; i < len; i++){
                 var song = this.songs[i];
-                if((song['artist']==artist) && (!this.inArray(song['album'],ret.albums)))ret.albums.push(song['album']);
+                var key = song['album'].toLowerCase();
+                // A better way handling duplicate keys with massive performance :)
+                // Thanks to <Jonathan Sampson> from http://stackoverflow.com/questions/10757516/how-to-prevent-adding-duplicate-keys-to-a-javascript-array
+                if((song['artist']==artist) && !(key in ret))ret[key] = song['album'];
             }
         }
-        Tomahawk.addAlbumResults(ret);
+        Tomahawk.addAlbumResults({
+            qid: qid,
+            artist: artist,
+            albums: this.objectValues(ret)
+        });
     },
     tracks:function(qid,artist,album){
-        var ret = {
+        var ret = {};
+        if(this.ready){
+            var len = this.songs.length;
+            for(var i = 0; i < len; i++){
+                var song = this.songs[i];
+                var key = song['title'].toLowerCase();
+                // A better way handling duplicate keys with massive performance :)
+                // Thanks to <Jonathan Sampson> from http://stackoverflow.com/questions/10757516/how-to-prevent-adding-duplicate-keys-to-a-javascript-array
+                if((song['artist']==artist) && (song['album']==album) && !(key in ret))ret[key] = this.getSongItem(song);
+            }
+        }
+        Tomahawk.addAlbumTrackResults({
             qid: qid,
             artist: artist,
             album: album,
-            results: []
-        };
-        if(this.ready){
-            var len = this.songs.length;
-            for(var i = 0; i < len; i++){
-                var song = this.songs[i];
-                var tmp = this.getSongItem(song);
-                if((song['artist']==artist) && (song['album']==album) && (!this.inArray(tmp,ret.results)))ret.results.push(tmp);
-            }
-        }
-        Tomahawk.addAlbumTrackResults(ret);
+            results: this.objectValues(ret)
+        });
     },
     collection:function(){
         if(this.ready) return {
@@ -193,8 +201,10 @@ var DaapJSResolver = Tomahawk.extend(TomahawkResolver,{
         // start with unsecure login - no password.
         client.login(loginCompleted);
     },
-    inArray:function(needle,haystack){
-        return (haystack.indexOf(needle) > -1)
+    objectValues:function(obj){
+        var tmp = [];
+        for(var k in obj)tmp.push(obj[k]);
+        return tmp;
     }
 });
 Tomahawk.resolver.instance = DaapJSResolver;
