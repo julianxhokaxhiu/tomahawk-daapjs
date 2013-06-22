@@ -19,7 +19,7 @@ var DaapJSResolver = Tomahawk.extend(TomahawkResolver,{
             Tomahawk.log('Loading the existing cache...');
             this.songs = JSON.parse(cachedSongs);
             this.ready = true;
-            Tomahawk.reportCapabilities(TomahawkResolverCapability.Browsable | TomahawkResolverCapability.AccountFactory);
+            Tomahawk.reportCapabilities(TomahawkResolverCapability.Browsable);
         }else{
             if(userConfig !== undefined){
                 this.host = userConfig.host;
@@ -108,7 +108,7 @@ var DaapJSResolver = Tomahawk.extend(TomahawkResolver,{
             var len = this.songs.length;
             for(var i = 0; i < len; i++){
                 var song = this.songs[i];
-                if(!(song['artist'] in ret.artists))ret.artists.push(song['artist']);
+                if(!this.inArray(song['artist'],ret.artists))ret.artists.push(song['artist']);
             }
         }
         Tomahawk.addArtistResults(ret);
@@ -123,12 +123,12 @@ var DaapJSResolver = Tomahawk.extend(TomahawkResolver,{
             var len = this.songs.length;
             for(var i = 0; i < len; i++){
                 var song = this.songs[i];
-                if(song['artist']==artist && !(song['album'] in ret.albums))ret.albums.push(song['album']);
+                if((song['artist']==artist) && (!this.inArray(song['album'],ret.albums)))ret.albums.push(song['album']);
             }
         }
         Tomahawk.addAlbumResults(ret);
     },
-    tracks:function (qid,artist,album){
+    tracks:function(qid,artist,album){
         var ret = {
             qid: qid,
             artist: artist,
@@ -139,7 +139,7 @@ var DaapJSResolver = Tomahawk.extend(TomahawkResolver,{
             var len = this.songs.length;
             for(var i = 0; i < len; i++){
                 var song = this.songs[i];
-                if(song['artist']==artist && song['album']==album && !(song['title'] in ret.results))ret.results.push(song['title']);
+                if((song['artist']==artist) && (song['album']==album) && (!this.inArray(song['title'],ret.results)))ret.results.push(song['title']);
             }
         }
         Tomahawk.addAlbumTrackResults(ret);
@@ -147,7 +147,7 @@ var DaapJSResolver = Tomahawk.extend(TomahawkResolver,{
     collection:function(){
         if(this.ready) return {
             prettyname: "DAAPjs",
-            description: this.host,
+            description: '',
             iconfile: "icon.png",
             trackcount: this.songs.length
         };
@@ -185,12 +185,15 @@ var DaapJSResolver = Tomahawk.extend(TomahawkResolver,{
                 _this.songs = streams;
                 Tomahawk.log('Ready!');
                 _this.ready = true;
-                Tomahawk.reportCapabilities(TomahawkResolverCapability.Browsable | TomahawkResolverCapability.AccountFactory);
+                Tomahawk.reportCapabilities(TomahawkResolverCapability.Browsable);
                 window.localStorage.setItem('DJS_songs',JSON.stringify(streams));
             }else Tomahawk.log('Could not fetch streams: [HTML Status code = ' + code + ']');
         };
         // start with unsecure login - no password.
         client.login(loginCompleted);
+    },
+    inArray:function(needle,haystack){
+        return (haystack.indexOf(needle) > -1)
     }
 });
 Tomahawk.resolver.instance = DaapJSResolver;
