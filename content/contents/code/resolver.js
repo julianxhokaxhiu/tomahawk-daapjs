@@ -19,6 +19,7 @@ var DaapJSResolver = Tomahawk.extend(TomahawkResolver,{
             Tomahawk.log('Loading the existing cache...');
             this.songs = JSON.parse(cachedSongs);
             this.ready = true;
+            Tomahawk.reportCapabilities(TomahawkResolverCapability.Browsable | TomahawkResolverCapability.AccountFactory);
         }else{
             if(userConfig !== undefined){
                 this.host = userConfig.host;
@@ -92,7 +93,6 @@ var DaapJSResolver = Tomahawk.extend(TomahawkResolver,{
                 if(song['album'].toLowerCase().indexOf(searchString)!=-1)add=true;
                 if(song['genre'].toLowerCase().indexOf(searchString)!=-1)add=true;
                 if(add)ret.results.push(this.getSongItem(song));
-                if(add)Tomahawk.log(JSON.stringify(song,null,2));
             }
         }
         Tomahawk.addTrackResults(ret);
@@ -185,6 +185,7 @@ var DaapJSResolver = Tomahawk.extend(TomahawkResolver,{
                 _this.songs = streams;
                 Tomahawk.log('Ready!');
                 _this.ready = true;
+                Tomahawk.reportCapabilities(TomahawkResolverCapability.Browsable | TomahawkResolverCapability.AccountFactory);
                 window.localStorage.setItem('DJS_songs',JSON.stringify(streams));
             }else Tomahawk.log('Could not fetch streams: [HTML Status code = ' + code + ']');
         };
