@@ -2,7 +2,7 @@
 
 **AUTHOR:** Julian Xhokaxhiu
 
-**VERSION:** 0.1
+**VERSION:** 0.2
 
 **DESCRIPTION:** A DAAP resolver for [Tomahawk Player](http://www.tomahawk-player.org/)
 
