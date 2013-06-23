@@ -1,7 +1,7 @@
 /*
  * (c) 2013 Julian Xhokaxhiu <http://julianxhokaxhiu.com>
  */
-
+'use strict';
 var DaapJSResolver = Tomahawk.extend(TomahawkResolver,{
     ready:false,
     songs:null,
@@ -15,7 +15,7 @@ var DaapJSResolver = Tomahawk.extend(TomahawkResolver,{
     init: function(){
         var userConfig = this.getUserConfig();
         var cachedSongs = window.localStorage.getItem('DJS_songs');
-        if(cachedSongs){
+        if(cachedSongs&&(this.getDaysOld()<1)){
             if(userConfig !== undefined) this.host = userConfig.host;
             Tomahawk.log('Loading the existing cache...');
             this.songs = JSON.parse(cachedSongs);
@@ -77,7 +77,7 @@ var DaapJSResolver = Tomahawk.extend(TomahawkResolver,{
             var len = this.songs.length;
             for(var i = 0; i < len; i++){
                 var song = this.songs[i];
-                if(song['title']==title && song['artist']==artist && song['album']==album)ret.push(this.getSongItem(song));
+                if(song['title']===title && song['artist']===artist && song['album']===album) ret.push(this.getSongItem(song));
             }
         }
         return Tomahawk.addTrackResults(ret);
@@ -92,10 +92,10 @@ var DaapJSResolver = Tomahawk.extend(TomahawkResolver,{
             for(var i = 0; i < len; i++){
                 var song = this.songs[i], add = false;
                 if(searchString=='#ALLDAAPDB#')add=true;
-                if(song['title'].toLowerCase().indexOf(searchString)!=-1)add=true;
-                if(song['artist'].toLowerCase().indexOf(searchString)!=-1)add=true;
-                if(song['album'].toLowerCase().indexOf(searchString)!=-1)add=true;
-                if(song['genre'].toLowerCase().indexOf(searchString)!=-1)add=true;
+                if(song['title'].toLowerCase().indexOf(searchString)>-1)add=true;
+                if(song['artist'].toLowerCase().indexOf(searchString)>-1)add=true;
+                if(song['album'].toLowerCase().indexOf(searchString)>-1)add=true;
+                if(song['genre'].toLowerCase().indexOf(searchString)>-1)add=true;
                 if(add)ret.results.push(this.getSongItem(song));
             }
         }
@@ -109,15 +109,15 @@ var DaapJSResolver = Tomahawk.extend(TomahawkResolver,{
             var len = this.songs.length;
             for(var i = 0; i < len; i++){
                 var song = this.songs[i];
-                var key = song['artist'].toLowerCase();
+                var key = song['artist'];
                 // A better way handling duplicate keys with massive performance :)
                 // Thanks to <Jonathan Sampson> from http://stackoverflow.com/questions/10757516/how-to-prevent-adding-duplicate-keys-to-a-javascript-array
-                if(!(key in ret))ret[key] = song['artist'];
+                if(!(key in ret))ret[key] = 0;
             }
         }
         Tomahawk.addArtistResults({
             qid: qid,
-            artists: this.objectValues(ret)
+            artists: Object.keys(ret)
         });
     },
     albums:function(qid,artist){
@@ -126,16 +126,16 @@ var DaapJSResolver = Tomahawk.extend(TomahawkResolver,{
             var len = this.songs.length;
             for(var i = 0; i < len; i++){
                 var song = this.songs[i];
-                var key = song['album'].toLowerCase();
+                var key = song['album'];
                 // A better way handling duplicate keys with massive performance :)
                 // Thanks to <Jonathan Sampson> from http://stackoverflow.com/questions/10757516/how-to-prevent-adding-duplicate-keys-to-a-javascript-array
-                if((song['artist']==artist) && !(key in ret))ret[key] = song['album'];
+                if((song['artist']===artist) && !(key in ret))ret[key] = 0;
             }
         }
         Tomahawk.addAlbumResults({
             qid: qid,
             artist: artist,
-            albums: this.objectValues(ret)
+            albums: Object.keys(ret)
         });
     },
     tracks:function(qid,artist,album){
@@ -144,10 +144,10 @@ var DaapJSResolver = Tomahawk.extend(TomahawkResolver,{
             var len = this.songs.length;
             for(var i = 0; i < len; i++){
                 var song = this.songs[i];
-                var key = song['title'].toLowerCase();
+                var key = song['title'];
                 // A better way handling duplicate keys with massive performance :)
                 // Thanks to <Jonathan Sampson> from http://stackoverflow.com/questions/10757516/how-to-prevent-adding-duplicate-keys-to-a-javascript-array
-                if((song['artist']==artist) && (song['album']==album) && !(key in ret))ret[key] = this.getSongItem(song);
+                if((song['artist']===artist) && (song['album']===album) && !(key in ret))ret[key] = this.getSongItem(song);
             }
         }
         Tomahawk.addAlbumTrackResults({
@@ -167,6 +167,21 @@ var DaapJSResolver = Tomahawk.extend(TomahawkResolver,{
     },
 
     // UTILITY
+    fixItem:function(item){
+        var ret = 'N/A';
+        if(item){
+            if((typeof item) === 'string') ret = (item.length ? item : 'N/A');
+            else if((typeof item) === 'number') ret = (item>0 ? item : 0);
+        }
+        return ret;
+    },
+    fixDB:function(arr){
+        var _this = this;
+        return arr.map(function(e){
+            for(var k in e) e[k] = _this.fixItem(e[k]);
+            return e;
+        })
+    },
     getSongItem:function(song){
         if(song) return {
             artist: song['artist'],
@@ -174,7 +189,7 @@ var DaapJSResolver = Tomahawk.extend(TomahawkResolver,{
             track: song['title'],
             url: song['uri'],
             bitrate:song['bitrate'],
-            duration:(song['duration']/1000),
+            duration:Math.round(song['duration']/1000),
             size: song['size'],
             score: 1.0,
             extension:song['format'],
@@ -195,11 +210,12 @@ var DaapJSResolver = Tomahawk.extend(TomahawkResolver,{
         };
         var streamsFetched = function(code,streams) {
             if (code == 200) {
-                _this.songs = streams;
+                _this.songs = _this.fixDB(streams);
                 Tomahawk.log('Ready!');
                 _this.ready = true;
                 Tomahawk.reportCapabilities(TomahawkResolverCapability.Browsable);
                 window.localStorage.setItem('DJS_songs',JSON.stringify(streams));
+                window.localStorage.setItem('DJS_songs_ts',new Date());
             }else Tomahawk.log('Could not fetch streams: [HTML Status code = ' + code + ']');
         };
         // start with unsecure login - no password.
@@ -209,6 +225,15 @@ var DaapJSResolver = Tomahawk.extend(TomahawkResolver,{
         var tmp = [];
         for(var k in obj)tmp.push(obj[k]);
         return tmp;
+    },
+    getDaysOld:function(){
+        var ret = 0;
+        var cacheDate = window.localStorage.getItem('DJS_songs_ts');
+        if(cacheDate){
+            var diff = new Date(new Date() - cacheDate);
+            if(diff.getUTCSeconds()>0) ret = diff.getUTCSeconds() / (24*60*60);
+        }
+        return ret;
     }
 });
 Tomahawk.resolver.instance = DaapJSResolver;

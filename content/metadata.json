@@ -2,7 +2,7 @@
     "name": "DAAP resolver",
     "pluginName": "DAAP",
     "author": "Julian Xhokaxhiu",
-    "version": "0.1",
+    "version": "0.2",
     "website": "http://julianxhokaxhiu.com",
     "description": "Resolves your DAAP server contents and let you enjoy your music in your way",
     "type": "resolver/javascript",
